@@ -1,0 +1,218 @@
+---
+title: "Vanguard LifeStrategy Funds"
+format: html
+editor: visual
+toc: true
+---
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Load packages
+library(tidyquant)
+library(tidyverse)
+library(alphavantager)
+library(pracma)
+library(patchwork)  # Optional, for combining plots
+# library(arrow)
+library(plotly)
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+theme_set(theme_light())
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+rm(list=ls())
+# source(file = './alpha_vantage.py')
+# ETF <- tq_get(c("VASIX","VSCGX","VSMGX","VSMGX"), get = "alphavantage", av_fun = "TIME_SERIES_DAILY", from = as.Date(format(Sys.Date(), "%Y-01-01"))) |> rename(date = timestamp)
+
+
+```
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+# ETF <- tq_get(c("VASIX","VSCGX","VSMGX","VSMGX"), get = "alphavantage", av_fun = "TIME_SERIES_DAILY") |> rename(date = timestamp)
+
+```
+
+```{r}
+ETF <- tq_get(c("VASIX","VSCGX","VSMGX","VASGX")) |> filter(date >='2025-01-01')
+max(ETF$date)
+```
+```{r}
+vasix <- ETF |> filter(symbol =='VASIX') 
+vscgx <- ETF |> filter(symbol =='VSCGX')
+vsmgx <- ETF |> filter(symbol =='VSMGX')
+vasgx <- ETF |> filter(symbol =='VASGX')
+```
+```{r}
+etf_div <- tq_get(c("VASIX","VSCGX","VSMGX","VASGX"),get="dividends")
+```
+
+## LifeStrategy Income Fund(VASIX)
+
+You may be interested in this fund if you care mostly about current income and accept the limited growth potential that comes with less exposure to stock market risk.
+
+### Close + 100 Day Moving Average
+
+```{r}
+vasix$rolling_100d <- movavg(vasix$close,100,type=c("s"))
+ggplot(vasix) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_100d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="VASIX Closng Prices w/ 100 day MA")
+  
+```
+
+### Bollinger Bands
+
+```{r}
+vasix_bb <- vasix %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vasix_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "VASIX  - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+### Dividend
+
+```{r}
+vasix_div <- etf_div |> filter(symbol=='VASIX')
+round(mean(vasix_div$value),3)
+ggplot(vasix_div) + geom_col(aes(x=date,y=value))
+# ggplotly(bnd_plt) + labs(title="VASIX Dividend")
+
+```
+
+## LifeStrategy Conservative Growth Fund(VSCGX)
+
+You may be interested in this fund if you care about current income more than long-term growth, but still want some growth potential with less exposure to stock market risk.
+
+### Close + 100 Day Moving Average
+
+```{r}
+vscgx$rolling_100d <- movavg(vscgx$close,100,type=c("s"))
+ggplot(vscgx) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_100d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="vscgx Closng Prices w/ 100 day MA")
+  
+```
+
+### Bollinger Bands
+
+```{r}
+vscgx_bb <- vscgx %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vscgx_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "vscgx - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+
+
+```{r}
+vscgx_div <- etf_div |> filter(symbol=='VSCGX')
+round(mean(vscgx_div$value),3)
+ggplot(vscgx_div) + geom_col(aes(x=date,y=value))
+# ggplotly(bnd_plt) + labs(title="VASIX Dividend")
+
+```
+
+## LifeStrategy Moderate Growth Fund(VSMGX)
+
+You may be interested in this fund if you care about long-term growth more than current income and want more growth potential while accepting higher exposure to stock market risk.
+
+### Close + 100 Day Moving Average
+
+```{r}
+vsmgx$rolling_100d <- movavg(vsmgx$close,100,type=c("s"))
+ggplot(vsmgx) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_100d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="VASGX Closng Prices w/ 100 day MA")
+  
+```
+
+### Bollinger Bands
+
+```{r}
+vsmgx_bb <- vsmgx %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vsmgx_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "vsmgx - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+### Dividend
+
+```{r}
+vsmgx_div <- etf_div |> filter(symbol=='VSMGX')
+round(mean(vsmgx_div$value),3)
+ggplot(vsmgx_div) + geom_col(aes(x=date,y=value))
+
+```
+
+## LifeStrategy Growth Fund(VASGX)
+
+You may be interested in this fund if you care about long-term growth and are willing to accept significant exposure to stock market risk in exchange for more growth potential.
+
+
+### Close + 100 Day Moving Average
+
+```{r}
+vasgx$rolling_100d <- movavg(vasgx$close,100,type=c("s"))
+ggplot(vasgx) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_100d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="VASGX Closng Prices w/ 100 day MA")
+  
+```
+
+### Bollinger Bands
+
+```{r}
+vasgx_bb <- vasgx %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vasgx_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "vsmgx - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+### Dividend
+
+```{r}
+vasgx_div <- etf_div |> filter(symbol=='VASGX')
+round(mean(vasgx_div$value),3)
+ggplot(vasgx_div) + geom_col(aes(x=date,y=value))
+
+```

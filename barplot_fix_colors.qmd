@@ -1,0 +1,41 @@
+---
+title: "Fix colors"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+# Load packages
+library(tidyquant)
+library(tidyverse)
+library(alphavantager)
+library(pracma)
+library(patchwork)  # Optional, for combining plots
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+theme_set(theme_light())
+```
+
+```{r}
+bnd<- ETF  |> filter(symbol =='BND')
+
+
+ggplot(bnd, aes(x = date)) +
+  # Low to close (blue)
+  geom_segment(aes(xend = date, y = low, yend = close), color = "red", alpha = 0.5,size=4) +
+  # Close to high (red)
+  geom_segment(aes(xend = date, y = close, yend = high), color = "green", alpha = 0.5,size=4) +
+  # Close price dot
+  geom_point(aes(y = close), color = "black", size =2 ) +
+  labs(title = "BND: High (Red), Low (Blue), and Close (Black) Since Start of Year",
+       x = "Date", y = "Price (USD)") +
+  theme_minimal()
+
+```

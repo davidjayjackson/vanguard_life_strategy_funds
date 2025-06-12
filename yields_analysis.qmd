@@ -1,0 +1,19 @@
+---
+title: "Yields"
+format: html
+editor: visual
+---
+
+
+```{r}
+library(rvest)
+library(readr)
+url <- "https://investor.vanguard.com/investment-products/mutual-funds/profile/vasix"
+sec_yield <- url %>%
+  read_html() %>%
+  html_nodes(xpath = "//td[contains(., 'SEC yield')]/following-sibling::td") %>%
+  html_text() %>%
+  parse_number()
+
+```
+

@@ -1,0 +1,71 @@
+---
+title: "Forecasting"
+format: html
+editor: visual
+---
+
+## Quarto
+
+
+
+```{r}
+# Load required packages
+library(quantmod)
+library(forecast)
+
+# Step 1: Get stock data
+getSymbols("VTI", from = Sys.Date() - 365, to = Sys.Date(), auto.assign = TRUE)
+
+# Step 2: Extract the closing prices
+ed_close <- Cl(VTI)
+
+# Step 3: Subset last 12 months
+ed_close_12m <- ed_close[index(ed_close) >= Sys.Date() - 365]
+
+# Step 4: Convert to time series (daily frequency)
+ed_ts <- ts(as.numeric(ed_close_12m), frequency = 252)  # Approx. trading days in a year
+
+# Step 5: Fit ETS and ARIMA models
+ets_model <- ets(ed_ts)
+# arima_model <- auto.arima(ed_ts)
+arima_model <- arima(ed_ts,c(8,3,4))
+# Step 6: Forecast the next 30 trading days
+ets_forecast <- forecast(ets_model, h = 30)
+arima_forecast <- forecast(arima_model, h = 30)
+
+# Step 7: Plot forecasts using base R
+# ETS Plot
+plot(ets_forecast, main = "30-Day Forecast for ED (ETS Model)", ylab = "Closing Price", xlab = "Time")
+lines(ed_ts, col = "blue")  # Add actual data
+grid()
+
+# ARIMA Plot
+plot(arima_forecast, main = "30-Day Forecast for ED (ARIMA Model)", ylab = "Closing Price", xlab = "Time")
+lines(ed_ts, col = "blue")  # Add actual data
+```
+
+
+```{r}
+# Set plot range to encompass all data
+plot(ed_ts, main = "30-Day Forecast for ED (ETS vs ARIMA)", ylab = "Closing Price", xlab = "Time",
+     col = "blue", lwd = 2, xlim = range(time(ed_ts), time(ets_forecast$mean), time(arima_forecast$mean)),
+     ylim = range(ed_ts, ets_forecast$mean, arima_forecast$mean))
+
+# Add ETS forecast
+lines(ets_forecast$mean, col = "red", lwd = 2, lty = 2)
+
+# Add ARIMA forecast
+lines(arima_forecast$mean, col = "darkgreen", lwd = 2, lty = 3)
+
+# Optional: Add forecast intervals if desired
+# lines(ets_forecast$lower[,2], col = "red", lty = "dotted")
+# lines(ets_forecast$upper[,2], col = "red", lty = "dotted")
+# lines(arima_forecast$lower[,2], col = "darkgreen", lty = "dotted")
+# lines(arima_forecast$upper[,2], col = "darkgreen", lty = "dotted")
+
+# Add a legend
+legend("topleft", legend = c("Actual", "ETS Forecast", "ARIMA Forecast(8,3,4)"),
+       col = c("blue", "red", "darkgreen"), lty = c(1, 2, 3), lwd = 2)
+
+grid()
+```

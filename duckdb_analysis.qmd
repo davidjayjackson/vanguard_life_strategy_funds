@@ -1,0 +1,68 @@
+---
+title: "DuckDb: Stock Analysis"
+format: html
+editor: visual
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(duckdb)
+library(DBI)
+library(alphavantager)
+library(tidyquant)
+library(scales)
+library(plotly)
+library(lubridate)
+library(pracma)
+library(janitor)
+knitr::opts_chunk$set(echo = FALSE,message = FALSE)
+```
+
+```{r}
+rm(list=ls())
+drv <- duckdb()
+con <- dbConnect(drv,"../vanguard_income_funds/vangaurd.duckdb")
+dbListTables(con)
+
+```
+
+# Get Stock Data form duckdb database
+
+```{r}
+ET <- dbGetQuery(con,"SELECT * from ET;") |> clean_names()
+BND <- dbGetQuery(con,"SELECT * from BND;") |> clean_names()
+VTI <- dbGetQuery(con,"SELECT * from VTI;") |> clean_names()
+BNDX <- dbGetQuery(con,"SELECT * from BNDX;") |> clean_names()
+VXUS <- dbGetQuery(con,"SELECT * from VXUS;") |> clean_names()
+dbDisconnect(con)
+```
+
+# ET
+
+```{r}
+# Step 2: Calculate the 20-day Simple Moving Average (SMA) and the standard deviation
+bollinger_bands <- ET |> filter(date >='2025-01-01') %>%
+  mutate(SMA20 = rollmean(close, 20, fill = NA, align = 'right'), 
+         stddev = rollapply(close, 20, sd, fill = NA, align = 'right')) %>%
+  
+  # Step 3: Calculate the Upper and Lower Bollinger Bands
+  mutate(upper_band = SMA20 + (2 * stddev),
+         lower_band = SMA20 - (2 * stddev))
+
+# Step 4: View the data with Bollinger Bands
+# head(bollinger_bands)
+
+# Optional: Step 5 - Visualize the Bollinger Bands
+bb <- bollinger_bands %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(aes(y = close), color = "blue") +
+  geom_line(aes(y = SMA20), color = "red") +
+  geom_ribbon(aes(ymin = lower_band, ymax = upper_band), alpha = 0.2) +
+  labs(title = "Bollinger Bands for ET",
+       x = "Date", y = "Price") +
+  theme_minimal()
+ggplotly(bb)
+```

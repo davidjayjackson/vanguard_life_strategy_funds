@@ -1,0 +1,83 @@
+---
+title: "Vanguard Total International Bond (BNDX) ETF"
+subtitle: "W/ tidyquant"
+date: '2025-04-25'
+format: pdf
+toc: true
+echo: false
+---
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+library(tidyquant)
+library(tidyverse)
+# library(alphavantager)
+library(pracma)
+# library(patchwork)  # Optional, for combining plots
+# library(arrow)
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+theme_set(theme_light())
+```
+
+# Summary:
+
+Vanguard’s BNDX fund is designed to give U.S. investors broad exposure to high-quality international bonds while minimizing currency risk through hedging. Its core purpose is to enhance portfolio diversification with global bonds without exposing investors to unpredictable foreign exchange fluctuations.
+
+```{r}
+rm(list=ls())
+funds <- tq_get("BNDX",from="2025-01-01") 
+funds$MA_50d <- movavg(funds$close,50,'s')
+max(funds$date)
+```
+
+# Closing Price w/ 50 Day Moving Average
+
+```{r}
+funds |> filter(date >="2025-02-01") |>
+ggplot() + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=MA_50d,colour="50 day MA"),linewidth=1) +
+  labs(title="BNDX Close w/ 50 Day Moving Avearge")
+ 
+
+
+```
+
+# TQ Bar chart
+
+```{r}
+
+funds %>% filter(date >="2025-02-01") |>
+    ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen") 
+
+```
+
+# Bollinger Bands
+
+```{r}
+bnd_bb <- funds %>% filter(date >="2025-02-01") |>
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "BNDX ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+# Candlesticks
+
+```{r}
+
+funds |> filter(date >="2025-02-01") |> ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen")
+```

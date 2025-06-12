@@ -1,0 +1,274 @@
+---
+title: "TidyQuant Analysis"
+date: '2025-05-01'
+format: html
+editor: visual
+toc: true
+echo: false
+---
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Load packages
+library(tidyquant)
+library(tidyverse)
+library(alphavantager)
+library(pracma)
+library(patchwork)  # Optional, for combining plots
+library(arrow)
+library(plotly)
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+theme_set(theme_light())
+```
+
+```{r}
+rm(list=ls())
+source(file = './alpha_vantage.py')
+ETF <- tq_get(c("BND","BNDX","VTI","VXUS"), get = "alphavantage", av_fun = "TIME_SERIES_DAILY", from = as.Date(format(Sys.Date(), "%Y-01-01"))) |> rename(date = timestamp)
+max(ETF$date)
+
+
+```
+
+```{r}
+# ETF <- tq_get(c("BND","BNDX","VTI","VXUS"), get = "alphavantage", av_fun = "TIME_SERIES_DAILY") |> rename(date = timestamp)
+
+# bonds <- tq_get(c("BND"),from="2024-04-01") |> select(date,close)
+# write_parquet(bonds,"./bonds_eft.parquet")
+```
+
+```{r}
+bnd <- ETF |> filter(symbol=='BND')
+bnd |> select(-volume) |> write_csv("./bnd_close.csv")
+bndx <- ETF |> filter(symbol=='BNDX')
+# bndx  |> select(-volume) |>  write_parquet("./bndx_data.parquet")
+
+vti <- ETF |> filter(symbol=='VTI')
+vxus <- ETF |> filter(symbol=='VXUS')
+et <- ETF |> filter(symbol=='ET')
+
+```
+
+# BND
+
+### Close + 50 Day Moving Average
+
+```{r}
+bnd$rolling_50d <- movavg(bnd$close,75,type=c("s"))
+bnd$rolling_25d <- movavg(bnd$close,7,type=c("s"))
+ggplot(bnd) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_50d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="BND Closng Prices w/ 100 day MA")
+```
+
+### Barchart
+
+```{r}
+bnd |>   ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen") + theme_tq()
+```
+
+### Candlestick Chart
+
+```{r}
+bnd |>   ggplot(aes(x = date, y = close)) +
+  geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+      geom_ma(color = "darkgreen") + theme_tq()
+```
+
+### Bollinger Bands
+
+```{r}
+bnd_bb <- bnd %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "BND ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+# BNDX
+
+### Close + 50 Day Moving Average
+
+```{r}
+bndx$rolling_50d <- movavg(bndx$close,75,type=c("s"))
+bndx$rolling_25d <- movavg(bndx$close,7,type=c("s"))
+ggplot(bndx) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_50d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="BNDX Closng Prices w/ 100 day MA")
+```
+
+### Barchart
+
+```{r}
+bndx |>   ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen") + theme_tq()
+```
+
+### Candlestick Chart
+
+```{r}
+bndx |>   ggplot(aes(x = date, y = close)) +
+  geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+      geom_ma(color = "darkgreen") + theme_tq()
+```
+
+### Bollinger Bands
+
+```{r}
+bnd_bb <- bndx %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "BNDX ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+# VTI
+
+### Close + 50 Day Moving Average
+
+```{r}
+vti$rolling_50d <- movavg(vti$close,75,type=c("s"))
+vti$rolling_25d <- movavg(vti$close,7,type=c("s"))
+ggplot(vti) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_50d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="VTI Closng Prices w/ 100 day MA")
+```
+
+### Barchart
+
+```{r}
+vti |>   ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen")
+```
+
+### Candlestick Chart
+
+```{r}
+vti |>   ggplot(aes(x = date, y = close)) +
+  geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+      geom_ma(color = "darkgreen")
+```
+
+### Bollinger Bands
+
+```{r}
+vti_bb <- vti %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vti_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "VTI ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_minimal()
+
+```
+
+# VXUS
+
+### Close + 50 Day Moving Average
+
+```{r}
+vxus$rolling_50d <- movavg(vxus$close,75,type=c("s"))
+vxus$rolling_25d <- movavg(vxus$close,7,type=c("s"))
+ggplot(vxus) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_50d,colour="50d Rolling"),linewidth=1) +
+  labs(title="VXUS Closng Prices w/ 100 day MA")
+```
+
+### Barchart
+
+```{r}
+vxus |>   ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen")
+```
+
+### Candlestick Chart
+
+```{r}
+vxus |>   ggplot(aes(x = date, y = close)) +
+  geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+      geom_ma(color = "darkgreen")
+```
+
+### Bollinger Bands
+
+```{r}
+vti_bb <- vxus %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vti_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "VXUS ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_minimal()
+
+```
+
+# Dividends
+
+### BND
+
+```{r}
+etf_div <- tq_get(c("BND","BNDX","VTI","VXUS"),get="dividends")
+```
+
+```{r}
+bnd_div <- etf_div |> filter(symbol=='BND')
+bnd_plt <- ggplot(bnd_div) + geom_col(aes(x=date,y=value))
+ggplotly(bnd_plt)
+```
+
+### BNDX
+
+```{r}
+bndx_div <- etf_div |> filter(symbol=='BNDX')
+bndx_plt <- ggplot(bndx_div) + geom_col(aes(x=date,y=value))
+ggplotly(bndx_plt)
+```
+
+### VTI
+
+```{r}
+vti_div <- etf_div |> filter(symbol=='VTI')
+vti_plt <- ggplot(vti_div) + geom_col(aes(x=date,y=value))
+ggplotly(vti_plt)
+
+```
+
+### VXUS
+
+```{r}
+vxus_div <- etf_div |> filter(symbol=='VXUS')
+vxus_plt <- ggplot(vxus_div) + geom_col(aes(x=date,y=value))
+ggplotly(vxus_plt)
+
+```
+

@@ -1,0 +1,303 @@
+---
+title: "Bollinger Band: Vanguard ETF Funds"
+format: html
+editor: visual
+toc: true
+echo: false
+---
+
+```{r}
+# Load packages
+library(tidyquant)
+library(tidyverse)
+library(alphavantager)
+library(pracma)
+library(patchwork)  # Optional, for combining plots
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+theme_set(theme_light())
+```
+
+```{r}
+rm(list=ls())
+# Create this file to store you API key
+source(file = './alpha_vantage.py')
+ETF<- tq_get(c("BND","BNDX","VTI","VXUS"),get="stock.prices" , from = as.Date(format(Sys.Date(), "%Y-01-01"))  )
+
+```
+
+# BND
+
+```{r}
+
+bnd<- ETF |> filter(symbol =='BND')
+
+# Get YTD data
+# bnd <- tq_get("BND", get = "alphavantage", av_fun = "TIME_SERIES_DAILY", from = as.Date(format(Sys.Date(), "%Y-01-01"))) # |> rename(date = timestamp)
+
+# bnd_sma <- tq_get( "BND", get = "stock.prices", av_fun = "SMA",interval = "daily",time_period = 30,series_type = "close" )
+bnd$rolling_50d <- movavg(bnd$close,50,type=c("s"))
+bnd$rolling_25d <- movavg(bnd$close,7,type=c("s"))
+# bnd_combined <- left_join(bnd, bnd_sma, by = "date", suffix = c("", "_sma"))
+
+
+```
+```{r}
+ggplot(bnd, aes(x = date)) +
+  # Low to close (blue)
+  geom_segment(aes(xend = date, y = low, yend = close), color = "red", alpha = 0.5,size=4) +
+  # Close to high (red)
+  geom_segment(aes(xend = date, y = close, yend = high), color = "green", alpha = 0.5,size=4) +
+  # Close price dot
+  geom_point(aes(y = close), color = "black", size =2 ) +
+  labs(title = "BND: High (Red), Low (Blue), and Close (Black) Since Start of Year",
+       x = "Date", y = "Price (USD)") +
+  theme_minimal()
+
+```
+
+```{r}
+
+ggplot(bnd) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_line(aes(x=date,y = rolling_25d,colour = "25d_MA"),linewidth=1) +
+ geom_line(aes(x=date,y =rolling_50d,colour = "50d_MA"),linewidth=1) +
+  labs(title = "BND with 7/50 Day SMA", y = "Price", x = "Date")
+
+
+ggplot(bnd) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_smooth(aes(x=date,y=close,colour = "Loess"),method=loess,span=.5)
+```
+
+```{r}
+# ---- Plot 1: Candlestick Only ----
+p1 <- ggplot(bnd, aes(x = date)) +
+  geom_segment(aes(xend = date, y = low, yend = high), color = "black") +
+  geom_rect(aes(
+    xmin = date - 0.5, xmax = date + 0.5,
+    ymin = pmin(open, close),
+    ymax = pmax(open, close),
+    fill = open < close
+  ), color = "black") +
+  scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), guide = "none") +
+  labs(title = "BND ETF - Candlestick Chart (YTD)", x = "Date", y = "Price") +
+  theme_minimal()
+
+# ---- Plot 2: Bollinger Bands ----
+bnd_bb <- bnd %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+p2 <- ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", size = 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "BND ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_minimal()
+
+# ---- Display side-by-side or stacked ----
+p1 / p2  # stacked vertically, or use p1 + p2 for side-by-side
+```
+
+# BNDX
+
+```{r}
+
+bndx<-  ETF |> filter(symbol =='BNDX')
+bndx$rolling_50d <- movavg(bndx$close,50,type=c("s"))
+bndx$rolling_7d <- movavg(bndx$close,7,type=c("s"))
+
+ggplot(bndx, aes(x = date)) +
+  # Low to close (blue)
+  geom_segment(aes(xend = date, y = low, yend = close), color = "red", alpha = 0.5,size=4) +
+  # Close to high (red)
+  geom_segment(aes(xend = date, y = close, yend = high), color = "green", alpha = 0.5,size=4) +
+  # Close price dot
+  geom_point(aes(y = close), color = "black", size =2 ) +
+  labs(title = "BNDX: High (Green), Low (Red), and Close (Black) Since Start of Year",
+       x = "Date", y = "Price (USD)") +
+  theme_minimal()
+```
+
+```{r}
+
+ggplot(bndx) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_line(aes(x=date,y = rolling_7d,colour = "7d_MA"),linewidth=1) +
+ geom_line(aes(x=date,y =rolling_50d,colour = "50d_MA"),linewidth=1) +
+  labs(title = "BND with 7/50 Day SMA", y = "Price", x = "Date")
+
+ggplot(bndx) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_smooth(aes(x=date,y=close,colour = "Loess"),method=loess,span=.5)
+
+```
+
+```{r}
+
+# ---- Plot 1: Candlestick Only ----
+p1 <- ggplot(bndx, aes(x = date)) +
+  geom_segment(aes(xend = date, y = low, yend = high), color = "black") +
+  geom_rect(aes(
+    xmin = date - 0.5, xmax = date + 0.5,
+    ymin = pmin(open, close),
+    ymax = pmax(open, close),
+    fill = open < close
+  ), color = "black") +
+  scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), guide = "none") +
+  labs(title = "BNDX ETF - Candlestick Chart (YTD)", x = "Date", y = "Price") +
+  theme_minimal()
+
+# ---- Plot 2: Bollinger Bands ----
+bnd_bb <- bndx %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+p2 <- ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", size = 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "BNDX ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_minimal()
+
+# ---- Display side-by-side or stacked ----
+p1 / p2 + plot_layout(heights = c(4, 4)) # stacked vertically, or use p1 + p2 for side-by-side
+```
+
+# VTI
+
+```{r}
+# vti <- tq_get("VTI", get = "alphavantage", av_fun = "TIME_SERIES_DAILY", from = as.Date(format(Sys.Date(), "%Y-01-01"))) |> rename(date = timestamp)
+
+vti<-  ETF |> filter(symbol =='VTI')
+
+ggplot(vti, aes(x = date)) +
+  # Low to close (blue)
+  geom_segment(aes(xend = date, y = low, yend = close), color = "red", alpha = 0.5,size=4) +
+  # Close to high (red)
+  geom_segment(aes(xend = date, y = close, yend = high), color = "green", alpha = 0.5,size=4) +
+  # Close price dot
+  geom_point(aes(y = close), color = "black", size =2 ) +
+  labs(title = "VTI: High (Green), Low (Red), and Close (Black) Since Start of Year",
+       x = "Date", y = "Price (USD)") +
+  theme_minimal()
+
+
+
+
+
+vti$rolling_50d <- movavg(vti$close,50,type=c("s"))
+vti$rolling_7d <- movavg(vti$close,7,type=c("s"))
+
+ggplot(vti) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_line(aes(x=date,y = rolling_7d,colour = "7d_MA"),linewidth=1) +
+ geom_line(aes(x=date,y =rolling_50d,colour = "50d_MA"),linewidth=1) +
+  labs(title = "VTI with 7/50 Day SMA", y = "Price", x = "Date")
+
+ggplot(vti) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_smooth(aes(x=date,y=close,colour = "Loess"),method=loess,span=.5)
+
+```
+
+```{r}
+# ---- Plot 1: Candlestick Only ----
+p1 <- ggplot(vti, aes(x = date)) +
+  geom_segment(aes(xend = date, y = low, yend = high), color = "black") +
+  geom_rect(aes(
+    xmin = date - 0.5, xmax = date + 0.5,
+    ymin = pmin(open, close),
+    ymax = pmax(open, close),
+    fill = open < close
+  ), color = "black") +
+  scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), guide = "none") +
+  labs(title = "VTI ETF - Candlestick Chart (YTD)", x = "Date", y = "Price") +
+  theme_minimal()
+
+# ---- Plot 2: Bollinger Bands ----
+bnd_bb <- vti %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+p2 <- ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", size = 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "VTI ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_minimal()
+
+# ---- Display side-by-side or stacked ----
+p1 / p2 + plot_layout(heights = c(4, 4)) # stacked vertically, or use p1 + p2 for side-by-side
+```
+
+# VXUS
+
+```{r}
+
+vxus<-  ETF |> filter(symbol =='VXUS')
+
+vxus$rolling_50d <- movavg(vxus$close,50,type=c("s"))
+vxus$rolling_7d <- movavg(vxus$close,7,type=c("s"))
+
+
+ggplot(vxus, aes(x = date)) +
+  # Low to close (blue)
+  geom_segment(aes(xend = date, y = low, yend = close), color = "red", alpha = 0.5,size=4) +
+  # Close to high (red)
+  geom_segment(aes(xend = date, y = close, yend = high), color = "green", alpha = 0.5,size=4) +
+  # Close price dot
+  geom_point(aes(y = close), color = "black", size =2 ) +
+  labs(title = "VXUS: High (Green), Low (Red), and Close (Black) Since Start of Year",
+       x = "Date", y = "Price (USD)") +
+  theme_minimal()
+
+
+
+ggplot(vxus) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_line(aes(x=date,y = rolling_7d,colour = "7d_MA"),linewidth=1) +
+ geom_line(aes(x=date,y =rolling_50d,colour = "50d_MA"),linewidth=1) +
+  labs(title = "VXUS with 7/50 Day SMA", y = "Price", x = "Date")
+
+ggplot(vxus) +
+  geom_line(aes(x=date,y = close,colour = "Close"),linewidth=2) +
+  geom_smooth(aes(x=date,y=close,colour = "Loess"),method=loess,span=.5)
+```
+
+```{r}
+# ---- Plot 1: Candlestick Only ----
+p1 <- ggplot(vxus, aes(x = date)) +
+  geom_segment(aes(xend = date, y = low, yend = high), color = "black") +
+  geom_rect(aes(
+    xmin = date - 0.5, xmax = date + 0.5,
+    ymin = pmin(open, close),
+    ymax = pmax(open, close),
+    fill = open < close
+  ), color = "black") +
+  scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red"), guide = "none") +
+  labs(title = "VXUS ETF - Candlestick Chart (YTD)", x = "Date", y = "Price") +
+  theme_minimal()
+
+# ---- Plot 2: Bollinger Bands ----
+
+bnd_bb <- vxus %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+p2 <- ggplot(bnd_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", size = 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "VXUS ETF - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_minimal()
+
+# ---- Display side-by-side or stacked ----
+p1 / p2 + plot_layout(heights = c(4, 4)) # stacked vertically, or use p1 + p2 for side-by-side
+```
+
+

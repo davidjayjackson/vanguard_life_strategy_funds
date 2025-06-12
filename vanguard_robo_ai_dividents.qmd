@@ -1,0 +1,73 @@
+---
+title: "Vanguard Robo Investor: Dividends"
+format: html
+editor: visual
+toc: true
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidyquant)
+library(scales)
+library(plotly)
+library(lubridate)
+library(pracma)
+library(janitor)
+library(flextable)
+knitr::opts_chunk$set(echo = FALSE,message = FALSE)
+```
+
+```{r}
+rm(list=ls())
+funds <- tq_get(c("ET","BND","VTI","VXUS","BNDX"), gfunds = "stock.prices", from = " 2020-03-01")
+ET <- funds |> filter(symbol=="ET")
+BND <- funds |> filter(symbol=="BND")
+VTI <- funds |> filter(symbol=="VTI") 
+VXUS <- funds |> filter(symbol=="VXUS")
+BNDX <- funds |> filter(symbol=="BNDX")
+# VWINX <- funds |> filter(symbol=="VWINX")
+```
+
+# Energy Transfer(ET)
+
+```{r}
+ET <-tq_get("ET", get = "dividends", from = "2008-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Energy Transfer(ET)", y="Dividends")
+ggplotly(ET)
+
+```
+
+# Vanguard Total Stock Market ETF(VTI) 30%
+
+```{r}
+vti <- tq_get("VTI", get = "dividends", from = " 2008-01-01") |>
+ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Dividend: Vanguard Total Stock Market ETF(VTI)",y="Dividends")
+ggplotly(vti)
+
+```
+
+# Vanguard Total International Stock ETF (VXUS) 20%
+
+```{r}
+vxus <-tq_get("VXUS", get = "dividends", from = "2008-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Dividend per Share (VXUS)")
+ggplotly(vxus)
+```
+
+# Vanguard Total Bond Market ETF (BND) 35%
+
+```{r}
+bnd <-tq_get("BND", get = "dividends", from = "2008-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Vanguard Total Bond Market ETF (BND)", y="Dividends")
+ggplotly(bnd)
+
+```
+
+# Vanguard Total International Bond ETF (BNDX,15%)
+
+```{r}
+bndx <-tq_get("BNDX", get = "dividends", from = "2008-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Dividend per Share (VXUS)")
+ggplotly(vxus)
+
+```

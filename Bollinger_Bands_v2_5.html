@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2025-05-01">
+
+<title>TidyQuant Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Bollinger_Bands_v2_5_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Bollinger_Bands_v2_5_files/libs/quarto-html/quarto.js"></script>
+<script src="Bollinger_Bands_v2_5_files/libs/quarto-html/popper.min.js"></script>
+<script src="Bollinger_Bands_v2_5_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Bollinger_Bands_v2_5_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Bollinger_Bands_v2_5_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Bollinger_Bands_v2_5_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Bollinger_Bands_v2_5_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Bollinger_Bands_v2_5_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Bollinger_Bands_v2_5_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="Bollinger_Bands_v2_5_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+
+<script src="Bollinger_Bands_v2_5_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+
+<script src="Bollinger_Bands_v2_5_files/libs/plotly-binding-4.10.4/plotly.js"></script>
+
+<script src="Bollinger_Bands_v2_5_files/libs/typedarray-0.1/typedarray.min.js"></script>
+
+<script src="Bollinger_Bands_v2_5_files/libs/jquery-3.5.1/jquery.min.js"></script>
+
+<link href="Bollinger_Bands_v2_5_files/libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet">
+
+<script src="Bollinger_Bands_v2_5_files/libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
+
+<link href="Bollinger_Bands_v2_5_files/libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet">
+
+<script src="Bollinger_Bands_v2_5_files/libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
+
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#bnd" id="toc-bnd" class="nav-link active" data-scroll-target="#bnd">BND</a>
+  <ul class="collapse">
+  <li><a href="#close-50-day-moving-average" id="toc-close-50-day-moving-average" class="nav-link" data-scroll-target="#close-50-day-moving-average">Close + 50 Day Moving Average</a></li>
+  <li><a href="#barchart" id="toc-barchart" class="nav-link" data-scroll-target="#barchart">Barchart</a></li>
+  <li><a href="#candlestick-chart" id="toc-candlestick-chart" class="nav-link" data-scroll-target="#candlestick-chart">Candlestick Chart</a></li>
+  <li><a href="#bollinger-bands" id="toc-bollinger-bands" class="nav-link" data-scroll-target="#bollinger-bands">Bollinger Bands</a></li>
+  </ul></li>
+  <li><a href="#bndx" id="toc-bndx" class="nav-link" data-scroll-target="#bndx">BNDX</a>
+  <ul class="collapse">
+  <li><a href="#close-50-day-moving-average-1" id="toc-close-50-day-moving-average-1" class="nav-link" data-scroll-target="#close-50-day-moving-average-1">Close + 50 Day Moving Average</a></li>
+  <li><a href="#barchart-1" id="toc-barchart-1" class="nav-link" data-scroll-target="#barchart-1">Barchart</a></li>
+  <li><a href="#candlestick-chart-1" id="toc-candlestick-chart-1" class="nav-link" data-scroll-target="#candlestick-chart-1">Candlestick Chart</a></li>
+  <li><a href="#bollinger-bands-1" id="toc-bollinger-bands-1" class="nav-link" data-scroll-target="#bollinger-bands-1">Bollinger Bands</a></li>
+  </ul></li>
+  <li><a href="#vti" id="toc-vti" class="nav-link" data-scroll-target="#vti">VTI</a>
+  <ul class="collapse">
+  <li><a href="#close-50-day-moving-average-2" id="toc-close-50-day-moving-average-2" class="nav-link" data-scroll-target="#close-50-day-moving-average-2">Close + 50 Day Moving Average</a></li>
+  <li><a href="#barchart-2" id="toc-barchart-2" class="nav-link" data-scroll-target="#barchart-2">Barchart</a></li>
+  <li><a href="#candlestick-chart-2" id="toc-candlestick-chart-2" class="nav-link" data-scroll-target="#candlestick-chart-2">Candlestick Chart</a></li>
+  <li><a href="#bollinger-bands-2" id="toc-bollinger-bands-2" class="nav-link" data-scroll-target="#bollinger-bands-2">Bollinger Bands</a></li>
+  </ul></li>
+  <li><a href="#vxus" id="toc-vxus" class="nav-link" data-scroll-target="#vxus">VXUS</a>
+  <ul class="collapse">
+  <li><a href="#close-50-day-moving-average-3" id="toc-close-50-day-moving-average-3" class="nav-link" data-scroll-target="#close-50-day-moving-average-3">Close + 50 Day Moving Average</a></li>
+  <li><a href="#barchart-3" id="toc-barchart-3" class="nav-link" data-scroll-target="#barchart-3">Barchart</a></li>
+  <li><a href="#candlestick-chart-3" id="toc-candlestick-chart-3" class="nav-link" data-scroll-target="#candlestick-chart-3">Candlestick Chart</a></li>
+  <li><a href="#bollinger-bands-3" id="toc-bollinger-bands-3" class="nav-link" data-scroll-target="#bollinger-bands-3">Bollinger Bands</a></li>
+  </ul></li>
+  <li><a href="#dividends" id="toc-dividends" class="nav-link" data-scroll-target="#dividends">Dividends</a>
+  <ul class="collapse">
+  <li><a href="#bnd-1" id="toc-bnd-1" class="nav-link" data-scroll-target="#bnd-1">BND</a></li>
+  <li><a href="#bndx-1" id="toc-bndx-1" class="nav-link" data-scroll-target="#bndx-1">BNDX</a></li>
+  <li><a href="#vti-1" id="toc-vti-1" class="nav-link" data-scroll-target="#vti-1">VTI</a></li>
+  <li><a href="#vxus-1" id="toc-vxus-1" class="nav-link" data-scroll-target="#vxus-1">VXUS</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">TidyQuant Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 1, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2025-06-11"</code></pre>
+</div>
+</div>
+<section id="bnd" class="level1">
+<h1>BND</h1>
+<section id="close-50-day-moving-average" class="level3">
+<h3 class="anchored" data-anchor-id="close-50-day-moving-average">Close + 50 Day Moving Average</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="barchart" class="level3">
+<h3 class="anchored" data-anchor-id="barchart">Barchart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="candlestick-chart" class="level3">
+<h3 class="anchored" data-anchor-id="candlestick-chart">Candlestick Chart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="bollinger-bands" class="level3">
+<h3 class="anchored" data-anchor-id="bollinger-bands">Bollinger Bands</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="bndx" class="level1">
+<h1>BNDX</h1>
+<section id="close-50-day-moving-average-1" class="level3">
+<h3 class="anchored" data-anchor-id="close-50-day-moving-average-1">Close + 50 Day Moving Average</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="barchart-1" class="level3">
+<h3 class="anchored" data-anchor-id="barchart-1">Barchart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="candlestick-chart-1" class="level3">
+<h3 class="anchored" data-anchor-id="candlestick-chart-1">Candlestick Chart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="bollinger-bands-1" class="level3">
+<h3 class="anchored" data-anchor-id="bollinger-bands-1">Bollinger Bands</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="vti" class="level1">
+<h1>VTI</h1>
+<section id="close-50-day-moving-average-2" class="level3">
+<h3 class="anchored" data-anchor-id="close-50-day-moving-average-2">Close + 50 Day Moving Average</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="barchart-2" class="level3">
+<h3 class="anchored" data-anchor-id="barchart-2">Barchart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="candlestick-chart-2" class="level3">
+<h3 class="anchored" data-anchor-id="candlestick-chart-2">Candlestick Chart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="bollinger-bands-2" class="level3">
+<h3 class="anchored" data-anchor-id="bollinger-bands-2">Bollinger Bands</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="vxus" class="level1">
+<h1>VXUS</h1>
+<section id="close-50-day-moving-average-3" class="level3">
+<h3 class="anchored" data-anchor-id="close-50-day-moving-average-3">Close + 50 Day Moving Average</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="barchart-3" class="level3">
+<h3 class="anchored" data-anchor-id="barchart-3">Barchart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="candlestick-chart-3" class="level3">
+<h3 class="anchored" data-anchor-id="candlestick-chart-3">Candlestick Chart</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="bollinger-bands-3" class="level3">
+<h3 class="anchored" data-anchor-id="bollinger-bands-3">Bollinger Bands</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Bollinger_Bands_v2_5_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="dividends" class="level1">
+<h1>Dividends</h1>
+<section id="bnd-1" class="level3">
+<h3 class="anchored" data-anchor-id="bnd-1">BND</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-3bb3a573012be54a8c8e" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-3bb3a573012be54a8c8e">{"x":{"data":[{"orientation":"v","width":[18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455],"base":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"x":[16468,16496,16526,16556,16587,16617,16650,16679,16709,16741,16770,16792,16832,16861,16892,16923,16953,16983,17014,17045,17077,17106,17136,17157,17198,17226,17259,17287,17318,17350,17379,17410,17441,17471,17501,17526,17563,17591,17623,17652,17683,17714,17744,17778,17805,17836,17868,17889,17928,17956,17987,18017,18050,18078,18109,18142,18170,18201,18232,18253,18295,18323,18353,18383,18414,18444,18477,18506,18536,18568,18597,18619,18659,18687,18718,18750,18779,18809,18841,18871,18901,18932,18962,18984,19024,19052,19083,19114,19144,19174,19205,19236,19268,19297,19327,19349,19389,19417,19450,19478,19509,19541,19570,19601,19632,19662,19692,19713,19754,19783,19814,19844,19877,19905,19936,19969,19997,20028,20059,20081,20122,20150,20179,20209,20241],"y":[0.17000000000000001,0.16200000000000001,0.191,0.159,0.16600000000000001,0.16300000000000001,0.16900000000000001,0.16800000000000001,0.16400000000000001,0.16900000000000001,0.16700000000000001,0.23000000000000001,0.17399999999999999,0.16500000000000001,0.17299999999999999,0.16400000000000001,0.16900000000000001,0.16400000000000001,0.16500000000000001,0.16600000000000001,0.161,0.16300000000000001,0.16,0.20499999999999999,0.16800000000000001,0.158,0.17399999999999999,0.16800000000000001,0.17199999999999999,0.33900000000000002,0.34200000000000003,0.17399999999999999,0.16800000000000001,0.17299999999999999,0.16800000000000001,0.21099999999999999,0.17699999999999999,0.16500000000000001,0.20000000000000001,0.17799999999999999,0.36899999999999999,0.18099999999999999,0.187,0.188,0.183,0.19400000000000001,0.192,0.19800000000000001,0.19800000000000001,0.184,0.20000000000000001,0.19500000000000001,0.193,0.19400000000000001,0.193,0.188,0.182,0.185,0.17999999999999999,0.187,0.183,0.17299999999999999,0.19,0.17399999999999999,0.16900000000000001,0.16200000000000001,0.159,0.153,0.14999999999999999,0.151,0.14299999999999999,0.29099999999999998,0.13900000000000001,0.129,0.192,0.13100000000000001,0.13400000000000001,0.13200000000000001,0.13600000000000001,0.13500000000000001,0.13,0.13400000000000001,0.13500000000000001,0.27100000000000002,0.13700000000000001,0.129,0.19800000000000001,0.14099999999999999,0.14799999999999999,0.14899999999999999,0.153,0.156,0.156,0.16300000000000001,0.16500000000000001,0.17199999999999999,0.17599999999999999,0.16400000000000001,0.183,0.17999999999999999,0.187,0.184,0.193,0.19600000000000001,0.192,0.20300000000000001,0.20100000000000001,0.21099999999999999,0.21199999999999999,0.20200000000000001,0.216,0.214,0.219,0.221,0.224,0.22600000000000001,0.221,0.22800000000000001,0.223,0.23300000000000001,0.23499999999999999,0.219,0.23999999999999999,0.23599999999999999,0.23999999999999999],"text":["date: 2015-02-02<br />value: 0.170","date: 2015-03-02<br />value: 0.162","date: 2015-04-01<br />value: 0.191","date: 2015-05-01<br />value: 0.159","date: 2015-06-01<br />value: 0.166","date: 2015-07-01<br />value: 0.163","date: 2015-08-03<br />value: 0.169","date: 2015-09-01<br />value: 0.168","date: 2015-10-01<br />value: 0.164","date: 2015-11-02<br />value: 0.169","date: 2015-12-01<br />value: 0.167","date: 2015-12-23<br />value: 0.230","date: 2016-02-01<br />value: 0.174","date: 2016-03-01<br />value: 0.165","date: 2016-04-01<br />value: 0.173","date: 2016-05-02<br />value: 0.164","date: 2016-06-01<br />value: 0.169","date: 2016-07-01<br />value: 0.164","date: 2016-08-01<br />value: 0.165","date: 2016-09-01<br />value: 0.166","date: 2016-10-03<br />value: 0.161","date: 2016-11-01<br />value: 0.163","date: 2016-12-01<br />value: 0.160","date: 2016-12-22<br />value: 0.205","date: 2017-02-01<br />value: 0.168","date: 2017-03-01<br />value: 0.158","date: 2017-04-03<br />value: 0.174","date: 2017-05-01<br />value: 0.168","date: 2017-06-01<br />value: 0.172","date: 2017-07-03<br />value: 0.339","date: 2017-08-01<br />value: 0.342","date: 2017-09-01<br />value: 0.174","date: 2017-10-02<br />value: 0.168","date: 2017-11-01<br />value: 0.173","date: 2017-12-01<br />value: 0.168","date: 2017-12-26<br />value: 0.211","date: 2018-02-01<br />value: 0.177","date: 2018-03-01<br />value: 0.165","date: 2018-04-02<br />value: 0.200","date: 2018-05-01<br />value: 0.178","date: 2018-06-01<br />value: 0.369","date: 2018-07-02<br />value: 0.181","date: 2018-08-01<br />value: 0.187","date: 2018-09-04<br />value: 0.188","date: 2018-10-01<br />value: 0.183","date: 2018-11-01<br />value: 0.194","date: 2018-12-03<br />value: 0.192","date: 2018-12-24<br />value: 0.198","date: 2019-02-01<br />value: 0.198","date: 2019-03-01<br />value: 0.184","date: 2019-04-01<br />value: 0.200","date: 2019-05-01<br />value: 0.195","date: 2019-06-03<br />value: 0.193","date: 2019-07-01<br />value: 0.194","date: 2019-08-01<br />value: 0.193","date: 2019-09-03<br />value: 0.188","date: 2019-10-01<br />value: 0.182","date: 2019-11-01<br />value: 0.185","date: 2019-12-02<br />value: 0.180","date: 2019-12-23<br />value: 0.187","date: 2020-02-03<br />value: 0.183","date: 2020-03-02<br />value: 0.173","date: 2020-04-01<br />value: 0.190","date: 2020-05-01<br />value: 0.174","date: 2020-06-01<br />value: 0.169","date: 2020-07-01<br />value: 0.162","date: 2020-08-03<br />value: 0.159","date: 2020-09-01<br />value: 0.153","date: 2020-10-01<br />value: 0.150","date: 2020-11-02<br />value: 0.151","date: 2020-12-01<br />value: 0.143","date: 2020-12-23<br />value: 0.291","date: 2021-02-01<br />value: 0.139","date: 2021-03-01<br />value: 0.129","date: 2021-04-01<br />value: 0.192","date: 2021-05-03<br />value: 0.131","date: 2021-06-01<br />value: 0.134","date: 2021-07-01<br />value: 0.132","date: 2021-08-02<br />value: 0.136","date: 2021-09-01<br />value: 0.135","date: 2021-10-01<br />value: 0.130","date: 2021-11-01<br />value: 0.134","date: 2021-12-01<br />value: 0.135","date: 2021-12-23<br />value: 0.271","date: 2022-02-01<br />value: 0.137","date: 2022-03-01<br />value: 0.129","date: 2022-04-01<br />value: 0.198","date: 2022-05-02<br />value: 0.141","date: 2022-06-01<br />value: 0.148","date: 2022-07-01<br />value: 0.149","date: 2022-08-01<br />value: 0.153","date: 2022-09-01<br />value: 0.156","date: 2022-10-03<br />value: 0.156","date: 2022-11-01<br />value: 0.163","date: 2022-12-01<br />value: 0.165","date: 2022-12-23<br />value: 0.172","date: 2023-02-01<br />value: 0.176","date: 2023-03-01<br />value: 0.164","date: 2023-04-03<br />value: 0.183","date: 2023-05-01<br />value: 0.180","date: 2023-06-01<br />value: 0.187","date: 2023-07-03<br />value: 0.184","date: 2023-08-01<br />value: 0.193","date: 2023-09-01<br />value: 0.196","date: 2023-10-02<br />value: 0.192","date: 2023-11-01<br />value: 0.203","date: 2023-12-01<br />value: 0.201","date: 2023-12-22<br />value: 0.211","date: 2024-02-01<br />value: 0.212","date: 2024-03-01<br />value: 0.202","date: 2024-04-01<br />value: 0.216","date: 2024-05-01<br />value: 0.214","date: 2024-06-03<br />value: 0.219","date: 2024-07-01<br />value: 0.221","date: 2024-08-01<br />value: 0.224","date: 2024-09-03<br />value: 0.226","date: 2024-10-01<br />value: 0.221","date: 2024-11-01<br />value: 0.228","date: 2024-12-02<br />value: 0.223","date: 2024-12-24<br />value: 0.233","date: 2025-02-03<br />value: 0.235","date: 2025-03-03<br />value: 0.219","date: 2025-04-01<br />value: 0.240","date: 2025-05-01<br />value: 0.236","date: 2025-06-02<br />value: 0.240"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.228310502283104,"r":7.3059360730593621,"b":40.182648401826491,"l":43.105022831050235},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[16268.955,20440.045000000002],"tickmode":"array","ticktext":["2016","2018","2020","2022","2024"],"tickvals":[16801,17532,18262,18993,19723],"categoryorder":"array","categoryarray":["2016","2018","2020","2022","2024"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"y","title":{"text":"date","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.018450000000000001,0.38745000000000002],"tickmode":"array","ticktext":["0.0","0.1","0.2","0.3"],"tickvals":[0,0.099999999999999978,0.20000000000000001,0.30000000000000004],"categoryorder":"array","categoryarray":["0.0","0.1","0.2","0.3"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"x","title":{"text":"value","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":"transparent","line":{"color":"rgba(179,179,179,1)","width":0.66417600664176002,"linetype":"solid"},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"379c6e7cb43":{"x":{},"y":{},"type":"bar"}},"cur_data":"379c6e7cb43","visdat":{"379c6e7cb43":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="bndx-1" class="level3">
+<h3 class="anchored" data-anchor-id="bndx-1">BNDX</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-7ce235d746bbede8a4ae" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-7ce235d746bbede8a4ae">{"x":{"data":[{"orientation":"v","width":[18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455,18.900000000001455],"base":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"x":[16468,16496,16526,16556,16587,16617,16650,16679,16709,16741,16770,16792,16832,16861,16892,16923,16953,16983,17014,17045,17077,17106,17136,17157,17198,17226,17259,17287,17318,17350,17379,17410,17441,17471,17501,17526,17563,17591,17623,17652,17683,17714,17744,17778,17805,17836,17868,17889,17928,17956,17987,18017,18050,18078,18109,18142,18170,18201,18232,18253,18295,18323,18353,18383,18414,18444,18477,18506,18536,18568,18597,18619,18659,18687,18718,18750,18779,18809,18841,18871,18901,18932,18962,18984,19024,19052,19083,19114,19144,19174,19205,19236,19268,19297,19327,19349,19389,19417,19450,19478,19509,19541,19570,19601,19632,19662,19692,19713,19754,19783,19814,19844,19877,19905,19936,19969,19997,20028,20059,20081,20122,20150,20179,20209,20241],"y":[0.071999999999999995,0.062,0.056000000000000001,0.060999999999999999,0.050999999999999997,0.062,0.050999999999999997,0.057000000000000002,0.062,0.081000000000000003,0.11,0.13500000000000001,0.056000000000000001,0.055,0.056000000000000001,0.056000000000000001,0.055,0.056000000000000001,0.050000000000000003,0.056000000000000001,0.056000000000000001,0.060999999999999999,0.066000000000000003,0.40400000000000003,0.044999999999999998,0.045999999999999999,0.045999999999999999,0.045999999999999999,0.047,0.049000000000000002,0.048000000000000001,0.049000000000000002,0.049000000000000002,0.048000000000000001,0.048000000000000001,0.69099999999999995,0.049000000000000002,0.042999999999999997,0.051999999999999998,0.042999999999999997,0.047,0.048000000000000001,0.050000000000000003,0.050999999999999997,0.050000000000000003,0.053999999999999999,0.051999999999999998,1.0940000000000001,0.053999999999999999,0.045999999999999999,0.052999999999999999,0.050999999999999997,0.053999999999999999,0.055,0.053999999999999999,0.052999999999999999,0.051999999999999998,0.051999999999999998,0.050000000000000003,1.3520000000000001,0.044999999999999998,0.043999999999999997,0.050999999999999997,0.047,0.048000000000000001,0.047,0.048000000000000001,0.047,0.045999999999999999,0.047,0.044999999999999998,0.13600000000000001,0.044999999999999998,0.044999999999999998,0.041000000000000002,0.039,0.041000000000000002,0.042000000000000003,0.041000000000000002,0.040000000000000001,0.037999999999999999,0.039,0.034000000000000002,1.6180000000000001,0.047,0.035000000000000003,0.037999999999999999,0.037999999999999999,0.042000000000000003,0.042999999999999997,0.049000000000000002,0.048000000000000001,0.050000000000000003,0.053999999999999999,0.059999999999999998,0.215,0.063,0.058999999999999997,0.071999999999999995,0.070000000000000007,0.072999999999999995,0.078,0.082000000000000003,0.079000000000000001,0.079000000000000001,0.084000000000000005,0.086999999999999994,1.357,0.085999999999999993,0.085000000000000006,0.090999999999999998,0.088999999999999996,0.096000000000000002,0.092999999999999999,0.10100000000000001,0.10100000000000001,0.097000000000000003,0.098000000000000004,0.098000000000000004,1.014,0.10299999999999999,0.095000000000000001,0.108,0.104,0.107],"text":["date: 2015-02-02<br />value: 0.072","date: 2015-03-02<br />value: 0.062","date: 2015-04-01<br />value: 0.056","date: 2015-05-01<br />value: 0.061","date: 2015-06-01<br />value: 0.051","date: 2015-07-01<br />value: 0.062","date: 2015-08-03<br />value: 0.051","date: 2015-09-01<br />value: 0.057","date: 2015-10-01<br />value: 0.062","date: 2015-11-02<br />value: 0.081","date: 2015-12-01<br />value: 0.110","date: 2015-12-23<br />value: 0.135","date: 2016-02-01<br />value: 0.056","date: 2016-03-01<br />value: 0.055","date: 2016-04-01<br />value: 0.056","date: 2016-05-02<br />value: 0.056","date: 2016-06-01<br />value: 0.055","date: 2016-07-01<br />value: 0.056","date: 2016-08-01<br />value: 0.050","date: 2016-09-01<br />value: 0.056","date: 2016-10-03<br />value: 0.056","date: 2016-11-01<br />value: 0.061","date: 2016-12-01<br />value: 0.066","date: 2016-12-22<br />value: 0.404","date: 2017-02-01<br />value: 0.045","date: 2017-03-01<br />value: 0.046","date: 2017-04-03<br />value: 0.046","date: 2017-05-01<br />value: 0.046","date: 2017-06-01<br />value: 0.047","date: 2017-07-03<br />value: 0.049","date: 2017-08-01<br />value: 0.048","date: 2017-09-01<br />value: 0.049","date: 2017-10-02<br />value: 0.049","date: 2017-11-01<br />value: 0.048","date: 2017-12-01<br />value: 0.048","date: 2017-12-26<br />value: 0.691","date: 2018-02-01<br />value: 0.049","date: 2018-03-01<br />value: 0.043","date: 2018-04-02<br />value: 0.052","date: 2018-05-01<br />value: 0.043","date: 2018-06-01<br />value: 0.047","date: 2018-07-02<br />value: 0.048","date: 2018-08-01<br />value: 0.050","date: 2018-09-04<br />value: 0.051","date: 2018-10-01<br />value: 0.050","date: 2018-11-01<br />value: 0.054","date: 2018-12-03<br />value: 0.052","date: 2018-12-24<br />value: 1.094","date: 2019-02-01<br />value: 0.054","date: 2019-03-01<br />value: 0.046","date: 2019-04-01<br />value: 0.053","date: 2019-05-01<br />value: 0.051","date: 2019-06-03<br />value: 0.054","date: 2019-07-01<br />value: 0.055","date: 2019-08-01<br />value: 0.054","date: 2019-09-03<br />value: 0.053","date: 2019-10-01<br />value: 0.052","date: 2019-11-01<br />value: 0.052","date: 2019-12-02<br />value: 0.050","date: 2019-12-23<br />value: 1.352","date: 2020-02-03<br />value: 0.045","date: 2020-03-02<br />value: 0.044","date: 2020-04-01<br />value: 0.051","date: 2020-05-01<br />value: 0.047","date: 2020-06-01<br />value: 0.048","date: 2020-07-01<br />value: 0.047","date: 2020-08-03<br />value: 0.048","date: 2020-09-01<br />value: 0.047","date: 2020-10-01<br />value: 0.046","date: 2020-11-02<br />value: 0.047","date: 2020-12-01<br />value: 0.045","date: 2020-12-23<br />value: 0.136","date: 2021-02-01<br />value: 0.045","date: 2021-03-01<br />value: 0.045","date: 2021-04-01<br />value: 0.041","date: 2021-05-03<br />value: 0.039","date: 2021-06-01<br />value: 0.041","date: 2021-07-01<br />value: 0.042","date: 2021-08-02<br />value: 0.041","date: 2021-09-01<br />value: 0.040","date: 2021-10-01<br />value: 0.038","date: 2021-11-01<br />value: 0.039","date: 2021-12-01<br />value: 0.034","date: 2021-12-23<br />value: 1.618","date: 2022-02-01<br />value: 0.047","date: 2022-03-01<br />value: 0.035","date: 2022-04-01<br />value: 0.038","date: 2022-05-02<br />value: 0.038","date: 2022-06-01<br />value: 0.042","date: 2022-07-01<br />value: 0.043","date: 2022-08-01<br />value: 0.049","date: 2022-09-01<br />value: 0.048","date: 2022-10-03<br />value: 0.050","date: 2022-11-01<br />value: 0.054","date: 2022-12-01<br />value: 0.060","date: 2022-12-23<br />value: 0.215","date: 2023-02-01<br />value: 0.063","date: 2023-03-01<br />value: 0.059","date: 2023-04-03<br />value: 0.072","date: 2023-05-01<br />value: 0.070","date: 2023-06-01<br />value: 0.073","date: 2023-07-03<br />value: 0.078","date: 2023-08-01<br />value: 0.082","date: 2023-09-01<br />value: 0.079","date: 2023-10-02<br />value: 0.079","date: 2023-11-01<br />value: 0.084","date: 2023-12-01<br />value: 0.087","date: 2023-12-22<br />value: 1.357","date: 2024-02-01<br />value: 0.086","date: 2024-03-01<br />value: 0.085","date: 2024-04-01<br />value: 0.091","date: 2024-05-01<br />value: 0.089","date: 2024-06-03<br />value: 0.096","date: 2024-07-01<br />value: 0.093","date: 2024-08-01<br />value: 0.101","date: 2024-09-03<br />value: 0.101","date: 2024-10-01<br />value: 0.097","date: 2024-11-01<br />value: 0.098","date: 2024-12-02<br />value: 0.098","date: 2024-12-24<br />value: 1.014","date: 2025-02-03<br />value: 0.103","date: 2025-03-03<br />value: 0.095","date: 2025-04-01<br />value: 0.108","date: 2025-05-01<br />value: 0.104","date: 2025-06-02<br />value: 0.107"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.228310502283104,"r":7.3059360730593621,"b":40.182648401826491,"l":43.105022831050235},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[16268.955,20440.045000000002],"tickmode":"array","ticktext":["2016","2018","2020","2022","2024"],"tickvals":[16801,17532,18262,18993,19723],"categoryorder":"array","categoryarray":["2016","2018","2020","2022","2024"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"y","title":{"text":"date","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.080900000000000014,1.6989000000000001],"tickmode":"array","ticktext":["0.0","0.5","1.0","1.5"],"tickvals":[0,0.49999999999999994,1,1.5],"categoryorder":"array","categoryarray":["0.0","0.5","1.0","1.5"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"x","title":{"text":"value","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":"transparent","line":{"color":"rgba(179,179,179,1)","width":0.66417600664176002,"linetype":"solid"},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"379c1e92409":{"x":{},"y":{},"type":"bar"}},"cur_data":"379c1e92409","visdat":{"379c1e92409":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="vti-1" class="level3">
+<h3 class="anchored" data-anchor-id="vti-1">VTI</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-2dbedc945a78624c8abc" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-2dbedc945a78624c8abc">{"x":{"data":[{"orientation":"v","width":[75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545,75.599999999998545],"base":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"x":[16519,16612,16703,16790,16875,16966,17057,17155,17249,17338,17431,17521,17612,17704,17802,17889,17980,18064,18155,18254,18347,18438,18530,18620,18711,18802,18894,18988,19074,19166,19258,19348,19439,19531,19621,19712,19804,19902,19993,20080,20174],"y":[0.50800000000000001,0.46800000000000003,0.50800000000000001,0.58299999999999996,0.47999999999999998,0.46899999999999997,0.53900000000000003,0.72699999999999998,0.54200000000000004,0.57499999999999996,0.55300000000000005,0.67300000000000004,0.56599999999999995,0.60299999999999998,0.71399999999999997,0.72099999999999997,0.77200000000000002,0.54700000000000004,0.69999999999999996,0.88600000000000001,0.61399999999999999,0.69999999999999996,0.67400000000000004,0.78200000000000003,0.67200000000000004,0.67500000000000004,0.72399999999999998,0.85899999999999999,0.70799999999999996,0.749,0.79600000000000004,0.93100000000000005,0.78600000000000003,0.82699999999999996,0.79800000000000004,1.002,0.91100000000000003,0.95199999999999996,0.871,0.94099999999999995,0.98499999999999999],"text":["date: 2015-03-25<br />value: 0.508","date: 2015-06-26<br />value: 0.468","date: 2015-09-25<br />value: 0.508","date: 2015-12-21<br />value: 0.583","date: 2016-03-15<br />value: 0.480","date: 2016-06-14<br />value: 0.469","date: 2016-09-13<br />value: 0.539","date: 2016-12-20<br />value: 0.727","date: 2017-03-24<br />value: 0.542","date: 2017-06-21<br />value: 0.575","date: 2017-09-22<br />value: 0.553","date: 2017-12-21<br />value: 0.673","date: 2018-03-22<br />value: 0.566","date: 2018-06-22<br />value: 0.603","date: 2018-09-28<br />value: 0.714","date: 2018-12-24<br />value: 0.721","date: 2019-03-25<br />value: 0.772","date: 2019-06-17<br />value: 0.547","date: 2019-09-16<br />value: 0.700","date: 2019-12-24<br />value: 0.886","date: 2020-03-26<br />value: 0.614","date: 2020-06-25<br />value: 0.700","date: 2020-09-25<br />value: 0.674","date: 2020-12-24<br />value: 0.782","date: 2021-03-25<br />value: 0.672","date: 2021-06-24<br />value: 0.675","date: 2021-09-24<br />value: 0.724","date: 2021-12-27<br />value: 0.859","date: 2022-03-23<br />value: 0.708","date: 2022-06-23<br />value: 0.749","date: 2022-09-23<br />value: 0.796","date: 2022-12-22<br />value: 0.931","date: 2023-03-23<br />value: 0.786","date: 2023-06-23<br />value: 0.827","date: 2023-09-21<br />value: 0.798","date: 2023-12-21<br />value: 1.002","date: 2024-03-22<br />value: 0.911","date: 2024-06-28<br />value: 0.952","date: 2024-09-27<br />value: 0.871","date: 2024-12-23<br />value: 0.941","date: 2025-03-27<br />value: 0.985"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.228310502283104,"r":7.3059360730593621,"b":40.182648401826491,"l":48.949771689497723},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[16294.67,20398.329999999998],"tickmode":"array","ticktext":["2016","2018","2020","2022","2024"],"tickvals":[16801,17532,18262,18993,19723],"categoryorder":"array","categoryarray":["2016","2018","2020","2022","2024"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"y","title":{"text":"date","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.050100000000000006,1.0521],"tickmode":"array","ticktext":["0.00","0.25","0.50","0.75","1.00"],"tickvals":[0,0.25,0.5,0.75,1],"categoryorder":"array","categoryarray":["0.00","0.25","0.50","0.75","1.00"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"x","title":{"text":"value","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":"transparent","line":{"color":"rgba(179,179,179,1)","width":0.66417600664176002,"linetype":"solid"},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"379c23c1c8":{"x":{},"y":{},"type":"bar"}},"cur_data":"379c23c1c8","visdat":{"379c23c1c8":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="vxus-1" class="level3">
+<h3 class="anchored" data-anchor-id="vxus-1">VXUS</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-a5020cd27df9257ac86f" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-a5020cd27df9257ac86f">{"x":{"data":[{"orientation":"v","width":[76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5,76.5],"base":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"x":[16519,16612,16703,16790,16875,16966,17057,17155,17249,17338,17429,17521,17616,17704,17800,17889,17980,18068,18163,18253,18344,18435,18526,18617,18708,18799,18890,18981,19072,19164,19254,19345,19436,19528,19618,19709,19797,19895,19986,20077,20168],"y":[0.158,0.54700000000000004,0.224,0.34699999999999998,0.14299999999999999,0.53700000000000003,0.27400000000000002,0.39000000000000001,0.16,0.55600000000000005,0.29799999999999999,0.53900000000000003,0.14199999999999999,0.59299999999999997,0.26800000000000002,0.496,0.16600000000000001,0.61099999999999999,0.29999999999999999,0.628,0.106,0.252,0.33900000000000002,0.58999999999999997,0.155,0.51500000000000001,0.35699999999999998,0.94099999999999995,0.10000000000000001,0.58899999999999997,0.28000000000000003,0.629,0.121,0.61799999999999999,0.29499999999999998,0.84699999999999998,0.224,0.48399999999999999,0.27200000000000002,1.0049999999999999,0.191],"text":["date: 2015-03-25<br />value: 0.158","date: 2015-06-26<br />value: 0.547","date: 2015-09-25<br />value: 0.224","date: 2015-12-21<br />value: 0.347","date: 2016-03-15<br />value: 0.143","date: 2016-06-14<br />value: 0.537","date: 2016-09-13<br />value: 0.274","date: 2016-12-20<br />value: 0.390","date: 2017-03-24<br />value: 0.160","date: 2017-06-21<br />value: 0.556","date: 2017-09-20<br />value: 0.298","date: 2017-12-21<br />value: 0.539","date: 2018-03-26<br />value: 0.142","date: 2018-06-22<br />value: 0.593","date: 2018-09-26<br />value: 0.268","date: 2018-12-24<br />value: 0.496","date: 2019-03-25<br />value: 0.166","date: 2019-06-21<br />value: 0.611","date: 2019-09-24<br />value: 0.300","date: 2019-12-23<br />value: 0.628","date: 2020-03-23<br />value: 0.106","date: 2020-06-22<br />value: 0.252","date: 2020-09-21<br />value: 0.339","date: 2020-12-21<br />value: 0.590","date: 2021-03-22<br />value: 0.155","date: 2021-06-21<br />value: 0.515","date: 2021-09-20<br />value: 0.357","date: 2021-12-20<br />value: 0.941","date: 2022-03-21<br />value: 0.100","date: 2022-06-21<br />value: 0.589","date: 2022-09-19<br />value: 0.280","date: 2022-12-19<br />value: 0.629","date: 2023-03-20<br />value: 0.121","date: 2023-06-20<br />value: 0.618","date: 2023-09-18<br />value: 0.295","date: 2023-12-18<br />value: 0.847","date: 2024-03-15<br />value: 0.224","date: 2024-06-21<br />value: 0.484","date: 2024-09-20<br />value: 0.272","date: 2024-12-20<br />value: 1.005","date: 2025-03-21<br />value: 0.191"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":26.228310502283104,"r":7.3059360730593621,"b":40.182648401826491,"l":48.949771689497723},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[16294.475,20392.525000000001],"tickmode":"array","ticktext":["2016","2018","2020","2022","2024"],"tickvals":[16801,17532,18262,18993,19723],"categoryorder":"array","categoryarray":["2016","2018","2020","2022","2024"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"y","title":{"text":"date","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.050249999999999996,1.0552499999999998],"tickmode":"array","ticktext":["0.00","0.25","0.50","0.75","1.00"],"tickvals":[0,0.25,0.5,0.75,0.99999999999999989],"categoryorder":"array","categoryarray":["0.00","0.25","0.50","0.75","1.00"],"nticks":null,"ticks":"outside","tickcolor":"rgba(179,179,179,1)","ticklen":3.6529680365296811,"tickwidth":0.33208800332088001,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(222,222,222,1)","gridwidth":0.33208800332088001,"zeroline":false,"anchor":"x","title":{"text":"value","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":"transparent","line":{"color":"rgba(179,179,179,1)","width":0.66417600664176002,"linetype":"solid"},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"379c6b6f4e72":{"x":{},"y":{},"type":"bar"}},"cur_data":"379c6b6f4e72","visdat":{"379c6b6f4e72":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

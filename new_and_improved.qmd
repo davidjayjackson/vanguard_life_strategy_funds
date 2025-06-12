@@ -1,0 +1,321 @@
+---
+title: "Vanguard Transactions"
+format: html
+editor: visual
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(duckdb)
+library(DBI)
+
+library(tidyquant)
+library(scales)
+library(plotly)
+library(lubridate)
+library(pracma)
+library(janitor)
+knitr::opts_chunk$set(echo = FALSE,message = FALSE)
+```
+
+# Import Vanguard Transaction Data
+
+```{r}
+
+drv <- duckdb()
+con <- dbConnect(drv,"../vanguard_income_funds/vangaurd.duckdb")
+dbListTables(con)
+
+```
+
+# Get Stock Data form duckdb database
+
+```{r}
+ET <- dbGetQuery(con,"SELECT * from ET;") |> clean_names()
+BND <- dbGetQuery(con,"SELECT * from BND;") |> clean_names()
+VTI <- dbGetQuery(con,"SELECT * from VTI;") |> clean_names()
+BNDX <- dbGetQuery(con,"SELECT * from BNDX;") |> clean_names()
+VXUS <- dbGetQuery(con,"SELECT * from VXUS;") |> clean_names()
+dbDisconnect(con)
+
+ET$long_mean <- movavg(ET$close,n=100, type=c("s"))
+BND$long_mean <- movavg(BND$close,n=100, type=c("s"))
+VTI$long_mean <- movavg(VTI$close,n=100, type=c("s"))
+VXUS$long_mean <- movavg(VXUS$close,n=100, type=c("s"))
+BNDX$long_mean <- movavg(BNDX$close,n=100, type=c("s"))
+ET <- ET |> filter(date >='2024-10-01')
+BND <- BND |> filter(date >='2024-10-01')
+VTI <- VTI |> filter(date >='2024-10-01')
+VXUS <- VXUS |> filter(date >='2024-10-01')
+BNDX <- BNDX |> filter(date >='2024-10-01')
+
+```
+
+# Energy Transfer(ET)
+
+```{r}
+ggplot(ET) + geom_line(aes(x=date,y=close,col="Close"),linewidth=1) +
+        geom_line(aes(x=date,y=long_mean,col="100 Day"),linewidth=1) + 
+#       geom_line(aes(x=date,y=short_mean,col="20 Day"),linewidth=1) +
+           theme_light() +
+        labs(title ="Daily Close with 100 Day Rolling Mean(ET)") 
+```
+
+```{r}
+
+# Step 2: Calculate the 20-day Simple Moving Average (SMA) and the standard deviation
+bollinger_bands <- ET  %>%
+  mutate(SMA20 = rollmean(close, 20, fill = NA, align = 'right'), 
+         stddev = rollapply(close, 20, sd, fill = NA, align = 'right')) %>%
+  
+  # Step 3: Calculate the Upper and Lower Bollinger Bands
+  mutate(upper_band = SMA20 + (2 * stddev),
+         lower_band = SMA20 - (2 * stddev))
+
+
+# Optional: Step 5 - Visualize the Bollinger Bands
+bb <- bollinger_bands %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(aes(y = close), color = "blue") +
+  geom_line(aes(y = SMA20), color = "red") +
+  geom_ribbon(aes(ymin = lower_band, ymax = upper_band), alpha = 0.2) +
+  labs(title = "Bollinger Bands(ET)",
+       x = "Date", y = "Price") +
+  theme_minimal()
+ggplotly(bb)
+```
+
+```{r}
+ET %>%  filter(date >='2024-09-01') |>
+  ggplot(aes(x = date, y = close)) +
+   geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+   geom_ma(color = "darkgreen" )
+    
+```
+
+```{r}
+ET %>% filter(date >='2024-09-01') |>
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+     geom_ma(color = "darkgreen" )
+```
+
+```{r}
+et <-tq_get("ET", get = "dividends", from = "2020-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Vanguard Total Bond Market ETF (BND)", y="Dividends")
+ggplotly(et)
+
+```
+
+# Vanguard Total Bond Market ETF (BND,35%)
+
+```{r}
+ 
+ggplot(BND) + geom_line(aes(x=date,y=close,col="Close"),linewidth=1) +
+        geom_line(aes(x=date,y=long_mean,col="100 Day"),linewidth=1) + 
+#       geom_line(aes(x=date,y=short_mean,col="20 Day"),linewidth=1) +
+           theme_light() +
+        labs(title ="Daily Close with 100 Day Rolling Mean(BND)") 
+```
+
+```{r}
+
+# Step 2: Calculate the 20-day Simple Moving Average (SMA) and the standard deviation
+bollinger_bands <- BND  %>%
+  mutate(SMA20 = rollmean(close, 20, fill = NA, align = 'right'), 
+         stddev = rollapply(close, 20, sd, fill = NA, align = 'right')) %>%
+  
+  # Step 3: Calculate the Upper and Lower Bollinger Bands
+  mutate(upper_band = SMA20 + (2 * stddev),
+         lower_band = SMA20 - (2 * stddev))
+
+
+# Optional: Step 5 - Visualize the Bollinger Bands
+bb <- bollinger_bands %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(aes(y = close), color = "blue") +
+  geom_line(aes(y = SMA20), color = "red") +
+  geom_ribbon(aes(ymin = lower_band, ymax = upper_band), alpha = 0.2) +
+  labs(title = "Bollinger Bands(BND)",
+       x = "Date", y = "Price") +
+  theme_minimal()
+ggplotly(bb)
+```
+
+```{r}
+BND %>%  filter(date >='2024-09-01') |>
+  ggplot(aes(x = date, y = close)) +
+   geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+   geom_ma(color = "darkgreen" )
+    
+```
+
+```{r}
+BND %>% filter(date >='2024-09-01') |>
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+     geom_ma(color = "darkgreen" )
+```
+
+```{r}
+bnd <-tq_get("BND", get = "dividends", from = "2020-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Vanguard Total Bond Market ETF (BND)", y="Dividends")
+ggplotly(bnd)
+
+```
+
+# Vanguard Total Stock Market ETF(VTI, 30%)
+
+```{r}
+funds <- VTI |> filter(date >= max(date) - 180)
+funds |> ggplot() + geom_line(aes(x=date,y=close,col="Close"),linewidth=1) +
+        geom_line(aes(x=date,y=long_mean,col="100 Day"),linewidth=1) + 
+#       geom_line(aes(x=date,y=short_mean,col="20 Day"),linewidth=1) +
+           theme_light() +
+        labs(title ="Daily Close with 100 Day Rolling Mean (VTI Stocks)") 
+```
+
+```{r}
+
+# Step 2: Calculate the 20-day Simple Moving Average (SMA) and the standard deviation
+bollinger_bands <- funds  %>%
+  mutate(SMA20 = rollmean(close, 20, fill = NA, align = 'right'), 
+         stddev = rollapply(close, 20, sd, fill = NA, align = 'right')) %>%
+  
+  # Step 3: Calculate the Upper and Lower Bollinger Bands
+  mutate(upper_band = SMA20 + (2 * stddev),
+         lower_band = SMA20 - (2 * stddev))
+
+
+# Optional: Step 5 - Visualize the Bollinger Bands
+bb <- bollinger_bands %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(aes(y = close), color = "blue") +
+  geom_line(aes(y = SMA20), color = "red") +
+  geom_ribbon(aes(ymin = lower_band, ymax = upper_band), alpha = 0.2) +
+  labs(title = "Bollinger Bands (VTI Stocks)",
+       x = "Date", y = "Price") +
+  theme_minimal()
+ggplotly(bb)
+```
+
+```{r}
+funds %>%  filter(date >='2024-09-01') |>
+    ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen" )
+    
+```
+
+```{r}
+funds %>% filter(date >='2024-09-01') |>
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen" )
+```
+
+```{r}
+vti <- tq_get("VTI", get = "dividends", from = " 1990-01-01") |>
+ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Dividend: Vanguard Total Stock Market ETF(VTI)",y="Dividends")
+ggplotly(vti)
+
+```
+
+# Vanguard Total International Stock ETF (VXUS 20%)
+
+```{r}
+funds <- VXUS |> filter(date >= max(date) - 180)
+funds |> ggplot() + geom_line(aes(x=date,y=close,col="Close"),linewidth=1) +
+        geom_line(aes(x=date,y=long_mean,col="100 Day"),linewidth=1) + 
+#       geom_line(aes(x=date,y=short_mean,col="20 Day"),linewidth=1) +
+           theme_light() +
+        labs(title ="Daily Close with 100 Day Rolling Mean(VXUS)") 
+```
+
+```{r}
+
+# Step 2: Calculate the 20-day Simple Moving Average (SMA) and the standard deviation
+bollinger_bands <- funds  %>%
+  mutate(SMA20 = rollmean(close, 20, fill = NA, align = 'right'), 
+         stddev = rollapply(close, 20, sd, fill = NA, align = 'right')) %>%
+  
+  # Step 3: Calculate the Upper and Lower Bollinger Bands
+  mutate(upper_band = SMA20 + (2 * stddev),
+         lower_band = SMA20 - (2 * stddev))
+
+# Optional: Step 5 - Visualize the Bollinger Bands
+bb <- bollinger_bands %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(aes(y = close), color = "blue") +
+  geom_line(aes(y = SMA20), color = "red") +
+  geom_ribbon(aes(ymin = lower_band, ymax = upper_band), alpha = 0.2) +
+  labs(title = "Bollinger Bands (VXUS)",
+       x = "Date", y = "Price") +
+  theme_minimal()
+ggplotly(bb)
+```
+
+```{r}
+funds %>%  filter(date >='2024-09-01') |>
+    ggplot(aes(x = date, y = close)) +
+    geom_barchart(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen" )
+    
+```
+
+```{r}
+funds %>% filter(date >='2024-09-01') |>
+    ggplot(aes(x = date, y = close)) +
+    geom_candlestick(aes(open = open, high = high, low = low, close = close)) +
+    geom_ma(color = "darkgreen" )
+```
+
+```{r}
+tq_get("VXUS", get = "dividends", from = " 1990-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Dividend per Share (VXUS)")
+
+```
+
+# Vanguard Total International Bond ETF (BNDX 15%)
+
+```{r}
+funds <- BNDX |> filter(date >= max(date) - 180)
+funds |> ggplot() + geom_line(aes(x=date,y=close,col="Close"),linewidth=1) +
+        geom_line(aes(x=date,y=long_mean,col="100 Day"),linewidth=1) + 
+#       geom_line(aes(x=date,y=short_mean,col="20 Day"),linewidth=1) +
+           theme_light() +
+        labs(title ="Daily Close with 100 Day Rolling Mean (BNDX)") 
+```
+
+```{r}
+
+# Step 2: Calculate the 20-day Simple Moving Average (SMA) and the standard deviation
+bollinger_bands <- funds  %>%
+  mutate(SMA20 = rollmean(close, 20, fill = NA, align = 'right'), 
+         stddev = rollapply(close, 20, sd, fill = NA, align = 'right')) %>%
+  
+  # Step 3: Calculate the Upper and Lower Bollinger Bands
+  mutate(upper_band = SMA20 + (2 * stddev),
+         lower_band = SMA20 - (2 * stddev))
+
+
+# Optional: Step 5 - Visualize the Bollinger Bands
+bb <- bollinger_bands %>% 
+  ggplot(aes(x = date, y = close)) +
+  geom_line(aes(y = close), color = "blue") +
+  geom_line(aes(y = SMA20), color = "red") +
+  geom_ribbon(aes(ymin = lower_band, ymax = upper_band), alpha = 0.2) +
+  labs(title = "Bollinger Bands (BNDX)",
+       x = "Date", y = "Price") +
+  theme_minimal()
+ggplotly(bb)
+```
+
+```{r}
+tq_get("BNDX", get = "dividends", from = " 1990-01-01") |>
+  ggplot() + geom_col(aes(x=date,y=value)) + labs(title="Dividend per Share (BNDX)")
+
+```
