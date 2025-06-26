@@ -1,0 +1,130 @@
+---
+title: "LifeStrategy Conservative Growth Fund(VSCGX)"
+format: html
+editor: visual
+---
+
+### Fund Summary
+
+You may be interested in this fund if you care about current income more than long-term growth, but still want some growth potential with less exposure to stock market risk.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Load packages
+library(tidyquant)
+library(tidyverse)
+library(pracma)
+library(fable)
+library(fabletools)
+library(tsibble)
+library(lubridate)
+library(pracma)
+library(feasts)
+library(zoo)
+
+theme_set(theme_light())
+```
+
+```{r}
+rm(list=ls())
+vscgx <- tq_get("VSCGX") |> filter(date >="2025-01-01")
+vscgx_div <- tq_get("VSCGX",get="dividends")
+vscgx |> select(date,close) |> summary()
+```
+
+### Close + 100 Day Moving Average
+
+```{r}
+vscgx$rolling_100d <- movavg(vscgx$close,100,type=c("s"))
+ggplot(vscgx) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+  geom_line(aes(x=date,y=rolling_100d,colour="50d Rolling"),linewidth=1) +
+  theme_tq() + labs(title="vscgx Closng Prices w/ 100 day MA")
+  
+```
+
+### Bollinger Bands
+
+```{r}
+vscgx_bb <- vscgx %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(vscgx_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "vscgx - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+```{r}
+# vscgx_div <- etf_div |> filter(symbol=='VSCGX')
+round(mean(vscgx_div$value),3)
+ggplot(vscgx_div) + geom_col(aes(x=date,y=value))
+```
+
+### Forecast ETS and ARIMA Using Fable
+
+```{r}
+
+
+# Step 1: Get YTD IBM stock data
+ibm_data <- tq_get("VSCGX", from = floor_date(Sys.Date(), "year")) %>%
+  select(date, close)
+
+# Step 2: Fill missing dates and LOCF for ETS compatibility
+ibm_filled <- ibm_data %>%
+  rename(Close = close) %>%
+  mutate(date = as_date(date)) %>%
+  complete(date = seq.Date(min(date), max(date), by = "day")) %>%
+  arrange(date) %>%
+  mutate(Close = zoo::na.locf(Close, na.rm = FALSE))  # Fill gaps
+
+# Step 3: Convert to tsibble
+ibm_tsibble <- ibm_filled %>%
+  as_tsibble(index = date)
+
+# Step 4: Fit models
+models <- ibm_tsibble %>%
+  model(
+    arima = ARIMA(Close),
+    ets = ETS(Close)
+  )
+
+# Step 5: Forecast
+forecasts <- models %>%
+  forecast(h = "30 days")
+
+# Step 6: Separate the forecasts by model
+arima_forecast <- forecasts %>% filter(.model == "arima")
+ets_forecast <- forecasts %>% filter(.model == "ets")
+
+# Step 7: Plot ARIMA forecast
+plot_arima <- autoplot(arima_forecast, ibm_tsibble, level = 95) +
+  labs(
+    title = "30-Day Forecast for VSCGX Closing Price (ARIMA)",
+    subtitle = "ARIMA model forecast with 95% CI",
+    y = "Closing Price (USD)",
+    x = "Date"
+  ) +
+  theme_minimal()
+
+# Step 8: Plot ETS forecast
+plot_ets <- autoplot(ets_forecast, ibm_tsibble, level = 95) +
+  labs(
+    title = "30-Day Forecast for VSCGX Closing Price (ETS)",
+    subtitle = "ETS model forecast with 95% CI",
+    y = "Closing Price (USD)",
+    x = "Date"
+  ) +
+  theme_minimal()
+
+# Step 9: Show both plots
+plot_arima
+plot_ets
+```
