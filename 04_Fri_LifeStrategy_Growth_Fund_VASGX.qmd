@@ -1,5 +1,5 @@
 ---
-title: "LifeStrategy Growth   Fund(VASGX)"
+title: "LifeStrategy Growth Fund(VASGX)"
 format: html
 editor: visual
 toc: true
@@ -13,6 +13,7 @@ You may be interested in this fund if you care about long-term growth and are wi
 #| echo: false
 #| message: false
 #| warning: false
+#| errors: false
 
 # Load packages
 library(tidyquant)
@@ -41,7 +42,7 @@ VASGX|> select(date,close) |> summary()
 ```{r}
 VASGX$rolling_100d <- movavg(VASGX$close,100,type=c("s"))
 ggplot(VASGX) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
-  geom_line(aes(x=date,y=rolling_100d,colour="50d Rolling"),linewidth=1) +
+    geom_line(aes(x=date,y=rolling_100d,colour="100d Rolling"),linewidth=1) +
   theme_tq() + labs(title="VASGX Closng Prices w/ 100 day MA")
   
 ```
@@ -67,26 +68,25 @@ ggplot(VASGX_bb, aes(x = date)) +
 
 ```{r}
 # vscgx_div <- etf_div |> filter(symbol=='VSCGX')
-round(mean(VASGX_div$value),3)
-ggplot(VASGX_div) + geom_col(aes(x=date,y=value))
+# round(mean(VASGX_div$value),3)
+ggplot(VASGX_div) + geom_col(aes(x=date,y=value)) +
+  geom_smooth(aes(x=date,y=value),method="lm")
 ```
 
 ### Forecast ETS and ARIMA Using Fable
 
 ```{r}
 
-
-# Step 1: Get YTD IBM stock data
+# Step 1: Get YTD VASGX stock data
 ibm_data <- tq_get("VASGX", from = floor_date(Sys.Date(), "year")) %>%
   select(date, close)
 
 # Step 2: Fill missing dates and LOCF for ETS compatibility
 ibm_filled <- ibm_data %>%
-  rename(Close = close) %>%
   mutate(date = as_date(date)) %>%
   complete(date = seq.Date(min(date), max(date), by = "day")) %>%
   arrange(date) %>%
-  mutate(Close = zoo::na.locf(Close, na.rm = FALSE))  # Fill gaps
+  mutate(close = zoo::na.locf(close, na.rm = FALSE))  # Maintain lowercase
 
 # Step 3: Convert to tsibble
 ibm_tsibble <- ibm_filled %>%
@@ -95,8 +95,8 @@ ibm_tsibble <- ibm_filled %>%
 # Step 4: Fit models
 models <- ibm_tsibble %>%
   model(
-    arima = ARIMA(Close),
-    ets = ETS(Close)
+    arima = ARIMA(close),
+    ets = ETS(close)
   )
 
 # Step 5: Forecast
@@ -107,27 +107,72 @@ forecasts <- models %>%
 arima_forecast <- forecasts %>% filter(.model == "arima")
 ets_forecast <- forecasts %>% filter(.model == "ets")
 
-# Step 7: Plot ARIMA forecast
-plot_arima <- autoplot(arima_forecast, ibm_tsibble, level = 95) +
-  labs(
-    title = "30-Day Forecast for VASGX Closing Price (ARIMA)",
-    subtitle = "ARIMA model forecast with 95% CI",
-    y = "Closing Price (USD)",
-    x = "Date"
-  ) +
-  theme_minimal()
 
+```
+
+### Basic ETS
+
+```{r}
 # Step 8: Plot ETS forecast
-plot_ets <- autoplot(ets_forecast, ibm_tsibble, level = 95) +
+autoplot(ets_forecast, ibm_tsibble, level = 95) +
   labs(
-    title = "30-Day Forecast for VASGX Closing Price (ETS)",
+    title = "14-Day Forecast for VASGX Closing Price (ETS)",
     subtitle = "ETS model forecast with 95% CI",
-    y = "Closing Price (USD)",
+    y = "Adjsuted Closing Price (USD)",
     x = "Date"
   ) +
   theme_minimal()
 
-# Step 9: Show both plots
-plot_arima
-plot_ets
+```
+
+### Basic ARIMA
+
+```{r}
+# Step 7: Plot ARIMA forecast
+autoplot(arima_forecast, ibm_tsibble, level = 95) +
+  labs(
+    title = "14-Day Forecast for VASGX Closing Price (ARIMA)",
+    subtitle = "ARIMA model forecast with 95% CI",
+    y = " Closing Price (USD)",
+    x = "Date"
+  ) +
+  theme_minimal()
+
+```
+
+### ARIMA Geimini AI Adjsuted
+
+```{r}
+# 1. Fetch data and prepare it
+VASGX <- tq_get("VASGX") %>%
+  filter(date >= "2025-01-01") %>%
+  mutate(date = ymd(date)) %>%
+  select(date, close) %>%
+  arrange(date)
+
+# 2. Regularize index by converting to tsibble and filling gaps
+VASGX_ts <- VASGX %>%
+  as_tsibble(index = date) %>%
+  fill_gaps()
+
+# 3. Fit ARIMA model
+fit <- VASGX_ts %>%
+  model(arima = ARIMA(close, stepwise = FALSE, approximation = FALSE))
+
+# 4. Forecast next 10 days
+fc <- forecast(fit, h = "14 days")
+
+
+# 6. Plot only April+ history alongside forecast and smooth trend
+
+fc %>%
+  autoplot(VASGX_ts) +
+  labs(title = "ARIMA Forecast 14 Day (VASGX)",
+       y = "Close Price") +
+  geom_smooth(
+    data = VASGX_ts %>% filter(!is.na(date), !is.na(close)),
+    aes(x = date, y = close),
+    se = FALSE,
+    color = "red"
+  )
 ```
