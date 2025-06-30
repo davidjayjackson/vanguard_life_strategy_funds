@@ -1,0 +1,224 @@
+---
+title: International Business Machines(IBM)"
+format: html
+editor: visual
+toc: true
+---
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| errors: false
+
+# Load packages
+library(tidyquant)
+library(tidyverse)
+library(pracma)
+library(fable)
+library(fabletools)
+library(tsibble)
+library(lubridate)
+library(pracma)
+library(feasts)
+library(zoo)
+library(prophet)
+theme_set(theme_light())
+```
+
+```{r}
+rm(list=ls())
+VASGX <- tq_get("IBM") |> filter(date >="2025-01-01")
+VASGX_div <- tq_get("IBM",get="dividends")
+VASGX|> select(date,close,adjusted) |> summary()
+```
+
+### Close + 100 Day Moving Average
+
+```{r}
+VASGX$rolling_100d <- movavg(VASGX$close,100,type=c("s"))
+ggplot(VASGX) + geom_line(aes(x=date,y=close,colour="Close"),linewidth=1) +
+    geom_line(aes(x=date,y=rolling_100d,colour="100d Rolling"),linewidth=1) +
+   geom_line(aes(x=date,y=adjusted,colour="Adjusted"),linewidth=1)
+  theme_tq() + labs(title=" IBM Closng Prices w/ 100 day MA")
+  
+```
+
+### Bollinger Bands
+
+```{r}
+VASGX_bb <- VASGX %>%
+  tq_mutate(select = close, mutate_fun = BBands) |> na.omit()
+
+ggplot(VASGX_bb, aes(x = date)) +
+  geom_ribbon(aes(ymin = dn, ymax = up), fill = "lightblue", alpha = 0.3) +
+  geom_line(aes(y = close), color = "blue", linewidth= 0.8) +
+  geom_line(aes(y = up), color = "red", linetype = "dashed") +
+  geom_line(aes(y = dn), color = "red", linetype = "dashed") +
+  geom_line(aes(y = mavg), color = "darkgreen", linetype = "dotdash") +
+  labs(title = "VASGX - Bollinger Bands (YTD)", x = "Date", y = "Closing Price") +
+  theme_tq()
+
+```
+
+### Dividends
+
+```{r}
+# vscgx_div <- etf_div |> filter(symbol=='VSCGX')
+# round(mean(VASGX_div$value),3)
+ggplot(VASGX_div) + geom_point(aes(x=date,y=value)) +
+  geom_smooth(aes(x=date,y=value),method="lm") +
+  labs(title="IBM Dividend History")
+```
+
+### Forecast ETS and ARIMA Using Fable
+
+```{r}
+# Step 1: Get YTD IBM stock data
+ibm_data <- tq_get("IBM", from = floor_date(Sys.Date(), "year")) %>%
+  select(date, close)
+
+# Step 2: Fill missing dates and LOCF for ETS compatibility
+ibm_filled <- ibm_data %>%
+  mutate(date = as_date(date)) %>%
+  complete(date = seq.Date(min(date), max(date), by = "day")) %>%
+  arrange(date) %>%
+  mutate(close = zoo::na.locf(close, na.rm = FALSE))  # This fixes the issue!
+
+# Step 3: Convert to tsibble
+ibm_tsibble <- ibm_filled %>%
+  as_tsibble(index = date)
+
+# Step 4: Fit models
+models <- ibm_tsibble %>%
+  model(
+    arima = ARIMA(close),
+    ets = ETS(close)
+  )
+
+# Step 5: Forecast
+forecasts <- models %>%
+  forecast(h = "14 days")
+
+# Step 6: Separate the forecasts by model
+arima_forecast <- forecasts %>% filter(.model == "arima")
+ets_forecast <- forecasts %>% filter(.model == "ets")
+
+
+
+```
+
+### Basic ETS
+
+```{r}
+# Step 8: Plot ETS forecast
+autoplot(ets_forecast, ibm_tsibble, level = 95) +
+  labs(
+    title = "14-Day Forecast for IBM Closing Price (ETS)",
+    subtitle = "ETS model forecast with 95% CI",
+    y = "Closing Price (USD)",
+    x = "Date"
+  ) +
+  theme_minimal()
+
+```
+
+### Basic ARIMA
+
+```{r}
+# Step 7: Plot ARIMA forecast
+autoplot(arima_forecast, ibm_tsibble, level = 95) +
+  labs(
+    title = "14-Day Forecast for IBM Closing Price (ARIMA)",
+    subtitle = "ARIMA model forecast with 95% CI",
+    y = " Closing Price (USD)",
+    x = "Date"
+  ) +
+  theme_minimal()
+
+```
+
+### ARIMA Geimini AI Adjsuted
+
+```{r}
+# 1. Fetch data and prepare it
+IBM_dat <- tq_get("IBM") %>%
+  filter(date >= "2025-01-01") %>%
+  mutate(date = ymd(date)) %>%
+  select(date, close) %>%
+  arrange(date)
+
+# 2. Regularize index by converting to tsibble and filling gaps
+IBM_ts <- IBM_dat %>%
+  as_tsibble(index = date) %>%
+  fill_gaps()
+
+# 3. Fit ARIMA model
+fit <- IBM_ts %>%
+  model(arima = ARIMA(close, stepwise = FALSE, approximation = FALSE))
+
+# 4. Forecast next 10 days
+fc <- forecast(fit, h = "14 days")
+
+
+# 6. Plot only April+ history alongside forecast and smooth trend
+
+fc %>%
+  autoplot(IBM_ts) +
+  labs(title = "ARIMA Forecast 14 Day (IBM)",
+       y = "Close Price") +
+  geom_smooth(
+    data = IBM_ts %>% filter(!is.na(date), !is.na(close)),
+    aes(x = date, y = close),
+    se = FALSE,
+    color = "red"
+  )
+```
+
+### Foreasting With Prophet
+
+
+```{r}
+
+# Step 1: Get last 12 months of IBM data
+start_date <- Sys.Date() %m-% months(6)
+ibm_data <- tq_get("IBM", from = start_date) %>%
+  select(date, close) %>%
+  rename(ds = date, y = close)
+
+# Step 2: Fit Prophet model
+m <- prophet(ibm_data)
+
+# Step 3: Forecast next 30 days
+future <- make_future_dataframe(m, periods = 30)
+forecast <- predict(m, future)
+
+# Step 4: Merge for plotting
+plot_data <- forecast %>%
+  select(ds, yhat, yhat_lower, yhat_upper) %>%
+  left_join(ibm_data, by = "ds")
+
+# Step 5: Gather into long format for line names
+plot_lines <- plot_data %>%
+  pivot_longer(cols = c(y, yhat), names_to = "type", values_to = "value") %>%
+  mutate(type = recode(type, y = "Actual", yhat = "Forecast"))
+
+# Step 6: Plot with legends
+ggplot() +
+  geom_ribbon(data = plot_data, aes(x = ds, ymin = yhat_lower, ymax = yhat_upper),
+              fill = "lightblue", alpha = 0.4) +
+  geom_line(data = plot_lines, aes(x = ds, y = value, color = type), size = 1) +
+  scale_color_manual(values = c("Actual" = "black", "Forecast" = "blue")) +
+  labs(
+    title = "IBM Closing Price Forecast (12-Month History + 30-Day Forecast)",
+    x = "Date",
+    y = "Closing Price (USD)",
+    color = "Legend",
+    caption = "Dashed = Actual | Solid = Forecast | Ribbon = 95% CI"
+  ) +
+  theme_tq()
+```
+
+
+
